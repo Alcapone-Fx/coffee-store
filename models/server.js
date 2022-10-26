@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const userRoutes = require('../routes/users.routes');
+const { dbConnection } = require('../database/config');
 
 class Server {
   #PORT;
@@ -11,18 +12,25 @@ class Server {
 
   constructor() {
     this.app = express();
+    // eslint-disable-next-line no-undef
     this.#PORT = process.env.PORT;
     this.#ENDPOINT_PREFIX = '/api';
     this.#paths = {
-      usuarios: `${this.#ENDPOINT_PREFIX}/users`,
+      usuarios: `${this.#ENDPOINT_PREFIX}/users`
     };
-        
+
+    this.connectDB();
+
     // Middlewares: functions tha are triggered when starting the server
     this.middlewares();
 
     this.routes();
   }
-  
+
+  async connectDB() {
+    await dbConnection();
+  }
+
   middlewares() {
     // You should only configure middleware at the application level if absolutely necessary
     // i.e. it really must be run for every single route in your application.
@@ -32,10 +40,10 @@ class Server {
     // Try to scope middleware to the route or router levels when you can.
 
     this.app.use(cors());
-    
+
     // middleware needed to read and parse payload requests
     this.app.use(express.json());
-    
+
     this.app.use(express.static('public'));
   }
 
