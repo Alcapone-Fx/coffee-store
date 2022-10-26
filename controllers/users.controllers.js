@@ -1,4 +1,5 @@
 const { response, request } = require('express');
+const User = require('../models/user');
 const { BadRequest } = require('../utils/errors.utils');
 
 const HTTP_STATUSES = { CREATED: 201, BAD_REQUEST: 400 };
@@ -12,14 +13,26 @@ const getUser = (req = request, res = response) => {
 const getUsers = (req = request, res = response) => {
   const { name, gender = 'NA' } = req.query;
 
-  res.json({ ok: true, message: 'First GET API from Controller', name, gender });
+  res.json({
+    ok: true,
+    message: 'First GET API from Controller',
+    name,
+    gender
+  });
 };
 
-const createUsers = (req, res = response) => {
-  const { name, age } = req.body;
-  res
-    .status(HTTP_STATUSES.CREATED)
-    .json({ ok: true, message: 'First POST API', name, age });
+const createUsers = async (req, res = response, next) => {
+  const body = req.body;
+  const user = new User(body);
+
+  try {
+    await user.save();
+    res
+      .status(HTTP_STATUSES.CREATED)
+      .json({ ok: true, message: 'First POST API', user });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const updateUsers = (req = request, res = response, next) => {
@@ -28,7 +41,7 @@ const updateUsers = (req = request, res = response, next) => {
     if (userId === '0') {
       throw new BadRequest('Missing required field: userId');
     }
-    
+
     res.json({ ok: true, message: 'First PUT API', id: userId });
   } catch (err) {
     // passing to the error handler middleware
@@ -36,16 +49,14 @@ const updateUsers = (req = request, res = response, next) => {
   }
 };
 
-const deleteUsers =
-  ('/',
-  (req, res) => {
-    res.json({ ok: true, message: 'First DELETE API' });
-  });
+const deleteUsers = (req, res) => {
+  res.json({ ok: true, message: 'First DELETE API' });
+};
 
 module.exports = {
   getUsers,
   getUser,
   createUsers,
   updateUsers,
-  deleteUsers,
+  deleteUsers
 };
